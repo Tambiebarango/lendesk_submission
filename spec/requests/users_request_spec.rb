@@ -16,10 +16,11 @@ RSpec.describe "Users", type: :request do
 
     context "when created with valid params" do
       it "should create a new user" do
-        expect {
-          post "/users", params: params
-        }.to change { User.count }.by(1)
+        post "/api/users", params: params
+
         expect(response.status).to eq(200)
+        result = User.find_by(username: params[:user][:username])
+        expect(result.username).to eq "test_user"
       end
     end
 
@@ -27,9 +28,8 @@ RSpec.describe "Users", type: :request do
       it "should return 422" do
         params[:user][:password] = "notstrongenough"
 
-        expect {
-          post "/users", params: params
-        }.to change { User.count }.by(0)
+        post "/api/users", params: params
+        
         expect(response.status).to eq(422)
       end
     end

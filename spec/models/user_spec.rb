@@ -3,56 +3,101 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
-  describe "validations" do
-    context "username not unique" do
-      it "should not be valid" do
-        user = User.create(username: "test", password: "StrongPassword123!")
+  before do
+    allow(BCrypt::Password).to receive(:new).and_return("password_hash")
+  end
+  
+  describe "#self.find_by" do
+    context "when user does not exist" do
+      it "should return nil" do
+        result = User.find_by(username: "doesnotexist")
 
-        new_user = User.new(username: "test", password: "StrongPassword123!")
-
-        expect(new_user.valid?).to be_falsey
+        expect(result).to be_nil
       end
     end
 
-    context "password" do
-      context "when password doesn't have uppercase" do
-        it "should not be valid" do
-          new_user = User.new(username: "test", password: "strongPassword123!")
+    context "when user exists" do
+      it "should return user object" do
+        $redis.hset("testuser", "username", "testuser", "password", "password!21")
 
-          expect(new_user.valid?).to be_falsey
+        result = User.find_by(username: "testuser")
+
+        expect(result.username).to eq "testuser"
+        expect(result.password_digest).to eq "password_hash"
+      end
+    end
+  end
+
+  describe "#self.create" do
+    context "validations" do
+      context "username not unique" do
+        it "should raise error" do
+          $redis.hset("testuser", "username", "testuser", "password", "password!21")
+  
+          expect {
+            User.create(
+              username: "testuser",
+              password: "StrongPassword123!"
+            )
+          }.to raise_error(RuntimeError, "Username must be unique")
         end
       end
 
-      context "when password is shorter than 8 chars" do
-        it "should not be valid" do
-          new_user = User.new(username: "test", password: "Stpas1!")
-
-          expect(new_user.valid?).to be_falsey
-        end
-      end
-      
-      context "when password is longer than 70 chars" do
-        it "should not be valid" do
-          password = "Stpas1!"*12
-          new_user = User.new(username: "test", password: password)
-
-          expect(new_user.valid?).to be_falsey
+      context "username not present" do
+        it "should raise error" do
+          expect {
+            User.create(
+              username: nil,
+              password: "StrongPassword123!"
+            )
+          }.to raise_error(RuntimeError, "Username can't be blank")
         end
       end
 
-      context "when password doesn't contain number" do
-        it "should not be valid" do
-          new_user = User.new(username: "test", password: "Stpasasd!")
-
-          expect(new_user.valid?).to be_falsey
+      context "password" do
+        it "should raise error when no uppercase" do
+          expect {
+            User.create(
+              username: "testuser",
+              password: "strongpassword123!"
+            )
+          }.to raise_error(RuntimeError, "Password must be complex")
         end
-      end
-      
-      context "when password doesn't special char" do
-        it "should not be valid" do
-          new_user = User.new(username: "test", password: "Stpasasdf1")
 
-          expect(new_user.valid?).to be_falsey
+        it "should raise error when password is shorter than 8 chars" do
+          expect {
+            User.create(
+              username: "testuser",
+              password: "sE23!"
+            )
+          }.to raise_error(RuntimeError, "Password must be complex")
+        end
+        
+        it "should raise error when password is longer than 70 chars" do
+          expect {
+            User.create(
+              username: "testuser",
+              password: "sE23!"*80
+            )
+          }.to raise_error(RuntimeError, "Password must be complex")
+        end
+        
+        it "should raise error when password doesn't have number" do
+          expect {
+            User.create(
+              username: "testuser",
+              password: "StrongPassword!"
+            )
+          }.to raise_error(RuntimeError, "Password must be complex")
+        end
+        
+        it "should raise error when password doesn't have special char" do
+          expect {
+            User.create(
+              username: "testuser",
+              password: "StrongPassword"
+            )
+          }.to raise_error(RuntimeError, "Password must be complex")
         end
       end
     end

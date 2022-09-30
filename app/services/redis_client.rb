@@ -2,20 +2,8 @@
 
 class RedisClient
   class << self
-    def get(key)
-      redis.get(key)
-    end
-
-    def set(key, value)
-      redis.set(key, value)
-    end
-
-    def expire(key, time)
-      redis.expire(key, time)
-    end
-
-    def exists?(key)
-      redis.exists(key) == 1
+    def method_missing(name, *args, &block)
+      redis.send(name, *args, &block)
     end
 
     private

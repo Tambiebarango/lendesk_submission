@@ -11,7 +11,7 @@ RSpec.describe "Authentication", type: :request do
 
     context "when login invalid" do
       it "should return 401" do
-        post "/authentication/login", params: params
+        post "/api/authentication/login", params: params
 
         expect(response.status).to eq 401
       end
@@ -23,7 +23,7 @@ RSpec.describe "Authentication", type: :request do
           allow(JwtClient).to receive(:encode).and_return("token")
           user = User.create(username: "test_user", password: "StrongPassword123!")
 
-          post "/authentication/login", params: params
+          post "/api/authentication/login", params: params
 
           body = JSON.parse(response.body)
           expect(response.status).to eq 200

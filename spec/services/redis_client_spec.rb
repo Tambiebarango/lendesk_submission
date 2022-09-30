@@ -3,37 +3,28 @@
 require 'rails_helper'
 
 RSpec.describe "RedisClient" do
-  describe "#self.get" do
+  describe "#self.hgetall" do
     it "should get key from redis" do
-      $redis.set("key", "value")
+      $redis.hset("hash", "key", "value")
 
-      expect(RedisClient.get("key")).to eq("value")
+      expect(RedisClient.hgetall("hash")).to eq({"key" => "value"})
     end
   end
   
-  describe "#self.set" do
+  describe "#self.hset" do
     it "should set key in redis" do
-      $redis.set("key", "value")
+      RedisClient.hset("hash", "key", "value")
 
-      expect(RedisClient.get("key")).to eq("value")
-    end
-  end
-
-  describe "#self.expire" do
-    it "should set key expiration in redis" do
-      RedisClient.set("key", "value")
-      RedisClient.expire("key", -1)
-
-      expect(RedisClient.get("key")).to be_nil
+      expect($redis.hgetall("hash")).to eq({"key" => "value"})
     end
   end
 
   describe "#self.exists?" do
     context "when key exists" do
       it "should return true" do
-        RedisClient.set("key", "value")
+        RedisClient.hset("hash", "key", "value")
 
-        result = RedisClient.exists?("key")
+        result = RedisClient.exists?("hash")
 
         expect(result).to be_truthy
       end
@@ -41,7 +32,7 @@ RSpec.describe "RedisClient" do
     
     context "when key does not exist" do
       it "should return false" do
-        result = RedisClient.exists?("key")
+        result = RedisClient.exists?("hash")
 
         expect(result).to be_falsey
       end

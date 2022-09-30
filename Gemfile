@@ -21,6 +21,7 @@ gem 'puma', '~> 5.0'
 gem 'redis', '~> 4.0'
 gem 'redis-namespace'
 gem 'mock_redis'
+gem 'activemodel', require: "active_model"
 
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'

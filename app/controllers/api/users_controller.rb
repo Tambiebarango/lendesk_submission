@@ -4,14 +4,14 @@ class Api::UsersController < ApplicationController
   skip_before_action :authenticate_request
 
   def create
-    @user = User.new(user_params)
+    @user = User.create(
+      username: user_params[:username],
+      password: user_params[:password]
+    )
     
-    if @user.save
-      render json: @user, only: [:username], status: :ok
-    else
-      render json: { errors: @user.errors.full_messages },
-             status: :unprocessable_entity
-    end
+    render json: @user.to_h, status: :ok
+  rescue => e
+    render json: { errors: e.message }, status: :unprocessable_entity
   end
 
   private

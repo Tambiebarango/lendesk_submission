@@ -2,8 +2,6 @@
 
 require 'rails_helper'
 
-include ActiveSupport::Testing::TimeHelpers
-
 RSpec.describe "Foo", type: :request do
   describe "#show" do
     let(:headers) {
@@ -22,7 +20,7 @@ RSpec.describe "Foo", type: :request do
     context "with invalid authorization" do
       context "no headers provided" do
         it "should return 401" do
-          get "/foo"
+          get "/api/foo"
 
           expect(response.status).to eq 401
         end
@@ -30,7 +28,7 @@ RSpec.describe "Foo", type: :request do
 
       context "invalid token provided" do
         it "should return 401" do
-          get "/foo", headers: { 'Authorization' => "poo" }
+          get "/api/foo", headers: { 'Authorization' => "poo" }
 
           expect(response.status).to eq 401
         end
@@ -43,7 +41,7 @@ RSpec.describe "Foo", type: :request do
           allow(JwtClient).to receive(:decode).and_return({ username: "foobar" })
           $redis.set("foobar", 1)
 
-          get "/foo", headers: headers
+          get "/api/foo", headers: headers
 
           body = JSON.parse(response.body)
           expect(response.status).to eq 200
@@ -57,7 +55,7 @@ RSpec.describe "Foo", type: :request do
           $redis.set("foobar", 1)
           $redis.expire("foobar", -1)
 
-          get "/foo", headers: headers
+          get "/api/foo", headers: headers
 
           expect(response.status).to eq(401)
         end
