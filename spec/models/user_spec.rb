@@ -18,12 +18,12 @@ RSpec.describe User, type: :model do
 
     context "when user exists" do
       it "should return user object" do
-        $redis.hset("testuser", "username", "testuser", "password", "password!21")
+        $redis.hset("User-testuser", "username", "testuser", "password", "password!21")
 
         result = User.find_by(username: "testuser")
 
         expect(result.username).to eq "testuser"
-        expect(result.password_digest).to eq "password_hash"
+        expect(result.password).to eq "password_hash"
       end
     end
   end

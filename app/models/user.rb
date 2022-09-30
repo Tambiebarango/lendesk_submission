@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class User
   include RedisRecordConcern
   include ActiveModel::Validations
@@ -5,35 +7,39 @@ class User
   validates :username, presence: true, uniqueness: true
   validates :password, presence: true, complex: true
   
+  REDIS_PREFIX = "User-"
+  REDIS_BLOCKLIST = %(errors validation_context)
+
   class << self
     def find_by(options = {})
       super do |result|
         return if result.empty?
         
-        hashed_password = BCrypt::Password.new(result["password_digest"])
+        hashed_password = BCrypt::Password.new(result["password"])
         
-        self.new(username: result["username"], password_digest: hashed_password)
+        self.new(username: result["username"], password: hashed_password, validate: false)
       end
     end
   
     def create(username:, password:)
-      hashed_password = BCrypt::Password.create(password)
-
-      super(username: username, password: password, password_digest: hashed_password) do |user|
-        save_to_redis(user, user.username)
+      super(username: username, password: password) do |user|
+        save_to_redis(user, "User-#{user.username}")
         user
       end
     end
   end
 
-  def initialize(username:, password: nil, password_digest:)
+  def initialize(username:, password: nil, validate: true)
     @username = username
     @password = password
-    @password_digest = password_digest
+
+    if validate && self.valid?
+      hash_password
+    end
   end
 
-  def authenticate(password)
-    @password_digest == password
+  def authenticate(pword)
+    @password == pword
   end
 
   def to_h
@@ -42,8 +48,10 @@ class User
     }
   end
   
-  attr_reader :username, :password_digest
+  attr_reader :username, :password
 
   private
-    attr_reader :password
+    def hash_password
+      @password = BCrypt::Password.create(password)
+    end
 end
