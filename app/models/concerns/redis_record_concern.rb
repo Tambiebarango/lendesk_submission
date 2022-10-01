@@ -13,7 +13,7 @@ module RedisRecordConcern
       
       return unless pk
 
-      result = RedisClient.hgetall("#{self::REDIS_PREFIX}#{pk}")
+      result = RedisClient.hgetall(to_db_id(pk))
 
       yield result
     end
@@ -42,6 +42,10 @@ module RedisRecordConcern
       end
       
       RedisClient.hset(*args)
+    end
+
+    def to_db_id(pk)
+      "#{self::REDIS_PREFIX}#{pk}"
     end
   end
 end

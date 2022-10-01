@@ -32,7 +32,7 @@ RSpec.describe User, type: :model do
     context "validations" do
       context "username not unique" do
         it "should raise error" do
-          $redis.hset("testuser", "username", "testuser", "password", "password!21")
+          $redis.hset("User-testuser", "username", "testuser", "password", "password!21")
   
           expect {
             User.create(

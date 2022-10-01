@@ -31,6 +31,7 @@ This submission doesn't take backups of redis into account. However, in a future
 3. On data loss, retrieve the backed up data from backup dump.
 
 
+
 ## API Documentation
 
 1. *Create a new user*

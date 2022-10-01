@@ -23,7 +23,9 @@ class User
   
     def create(username:, password:)
       super(username: username, password: password) do |user|
-        save_to_redis(user, "User-#{user.username}")
+        id = to_db_id(user.username)
+
+        save_to_redis(user, id)
         user
       end
     end
@@ -46,6 +48,10 @@ class User
     {
       username: username
     }
+  end
+
+  def db_id
+    "#{REDIS_PREFIX}#{username}"
   end
   
   attr_reader :username, :password
