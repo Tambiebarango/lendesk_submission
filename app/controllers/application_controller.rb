@@ -6,9 +6,11 @@ class ApplicationController < ActionController::API
   private
     def authenticate_request
       header = request.headers['Authorization']
-      user = JwtClient.decode(header)
+      data = JwtClient.decode(header)
+
+      user = User.find(data[:username])
       
-      unless RedisClient.exists?(user[:username])
+      unless user
         render json: { message: "Unauthorized" }, status: :unauthorized
       end
     rescue JWT::DecodeError => e

@@ -7,10 +7,10 @@ RSpec.describe User, type: :model do
     allow(BCrypt::Password).to receive(:new).and_return("password_hash")
   end
   
-  describe "#self.find_by" do
+  describe "#self.find" do
     context "when user does not exist" do
       it "should return nil" do
-        result = User.find_by(username: "doesnotexist")
+        result = User.find("doesnotexist")
 
         expect(result).to be_nil
       end
@@ -20,7 +20,7 @@ RSpec.describe User, type: :model do
       it "should return user object" do
         $redis.hset("User-testuser", "username", "testuser", "password", "password!21")
 
-        result = User.find_by(username: "testuser")
+        result = User.find("testuser")
 
         expect(result.username).to eq "testuser"
         expect(result.password).to eq "password_hash"

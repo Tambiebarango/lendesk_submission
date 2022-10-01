@@ -19,7 +19,7 @@ RSpec.describe "Users", type: :request do
         post "/api/users", params: params
 
         expect(response.status).to eq(200)
-        result = User.find_by(username: params[:user][:username])
+        result = User.find(params[:user][:username])
         expect(result.username).to eq "test_user"
       end
     end

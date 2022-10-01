@@ -2,7 +2,7 @@ class Api::AuthenticationController < ApplicationController
   skip_before_action :authenticate_request
 
   def create
-    @user = User.find_by(username: params[:username])
+    @user = User.find(params[:username])
     
     if @user && @user.authenticate(params[:password])
       token = JwtClient.encode(username: @user.username)

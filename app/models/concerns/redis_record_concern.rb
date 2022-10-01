@@ -6,13 +6,14 @@ module RedisRecordConcern
   end
 
   module ClassMethods
-    def find_by(options = {})
-      key = options.keys.first
-      prefix = "#{self::REDIS_PREFIX}"
+    def find(pk)
+      # Mimics active record's find method by searching redis
+      # Each model will have its own pk
+      # e.g. for the user model the pk is username
+      
+      return unless pk
 
-      return unless key
-
-      result = RedisClient.hgetall("#{prefix}#{options[key]}")
+      result = RedisClient.hgetall("#{self::REDIS_PREFIX}#{pk}")
 
       yield result
     end

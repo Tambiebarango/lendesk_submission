@@ -6,22 +6,17 @@ This is an internal authentication API that can be used to authenticate users.
 
 In order to build this API out following the requirements, I'm using Rails as the platform (without any DB support of active record) and Redis for data storage. However, I still have models that are basically just pure ruby objects.
 
-Since it's only an authentication app, I only have the `User` model. I have created a `ValidationConcern` that will take care of all validation issues for all models. These issues include
+Since it's only an authentication app, I only have the `User` model. I have used custom validators that inherit from `ActiveModel::EachValidator` to perform model validation on the user's `username` and `password`.
 
-- presence
-- uniqueness 
-- complexity (for passwords)
+Next, I have a `RedisRecordConcern` that takes care of storing and retrieving records from `redis`. This concern has a `find` class method that can retrieve a record using a primary key (pk). The user model's pk is `username` and records are stored in redis as `User-<username>`. 
 
-The idea is that any new validation issue should be added to this concern, and the concern will be included in the model.
+It also has a `create` class method that will initialize the object after the individual models have run their specific validations. It will be the responsibility of the individual models that include `RedisRecordConcern` to call `save_to_redis` method BECAUSE the models will decide what the hash name will be. E.g. for `User` model, the hash name in redis is the model instance's `username` method with `User-` prefixed to it.
 
-Next, I have a `RedisRecordConcern` that takes care of storing and retrieving records from `redis`. This concern has a `find_by` class method that can retrieve a record using the hash name it was stored under. It also has a `create` class method that will initialize the object after the individual models have run their specific validations. It will be the responsibility of the individual models that include `RedisRecordConcern` to call `save_to_redis` method BECAUSE the models will decide what the hash name will be. E.g. for `User` model, the hash name in redis is the model instance's `username method.
+I've used `bcrypt` to hash the user's password, so at no point in time is the bare password available or stored. `BCrypt` has the ability to compare raw strings to the hashed password and that's what I'm using to authenticate users.
 
-I've used `bcrypt` to hash the user's password, so at no point in time is the bare password available or stored. `BCrypt` has the ability though to compare raw strings to the hashed password and that's what I'm using to authenticate users.
+When a new user creates a new login, the `User.create` call will hash their password and store in the redis db once the complexity of the password and uniqueness of the username have been validated.
 
-When a new user creates a new login, the `User.create` call will hash their password and store in the redis db.
-
-When a user attempts to login with username and password, I will initialze a temporary `User` record calling `User.new` and passing in the stored user's user name and a hash of the stored user's password and then call `.authenticate` on that instance to compare 
-the password sent to the login endpoint against the hash.
+When a user attempts to login with username and password, I will initialze a temporary `User` object calling `User.new` and passing in the stored user's user name and a hash of the stored user's password and then call `.authenticate` on that instance to compare the password sent to the login endpoint against the hash.
 
 Once authenticated, I will then provide the user with a `JWT` token that expires in 2 hours authenticating them for every other request in the api such as `GET /api/foo`.
 
@@ -45,7 +40,7 @@ To create a new user, send a `POST` request to `/api/users` as follows:
 ```
 curl -X POST -H "Content-Type: application/json" \
     --data-raw '{"user": {"username": "example", "password": "StrongPasswoird123!"}}' \
-    http://localhost:3000/users
+    http://localhost:3000/api/users
 ```
 
 *Note:* The password must meet the following requirements:
@@ -64,7 +59,7 @@ To consume authenticated resources on the api, clients need a token. To obtain t
 ```
 curl -X POST -H "Content-Type: application/json" \
     --data-raw '{"username": "example", "password": "StrongPasswiord123!"}' \
-    http://localhost:3000/authentication/login
+    http://localhost:3000/api/authentication/login
 ```
 
 Succesful requests will receive a `200` status code as well as a token to be used for subsequent requests. The token expires after 2 hours. Unsuccesful requests will receive a `401` status code.
@@ -74,13 +69,13 @@ Succesful requests will receive a `200` status code as well as a token to be use
 Send a `GET` request to `/api/foo` making sure to pass in a valid non-expired token as a header:
 
 ```
-curl -X GET http://localhost:3000/foo -H 'Authorization:<valid_token>'
+curl -X GET http://localhost:3000/api/foo -H 'Authorization:<valid_token>'
 ```
 
 Successful requests will receive a `200` status code. Unsuccesful requests will receive a `401` status code.
 
 
-# Tests
+## Tests
 
 To run the full suite of tests (unit and integration), do the following:
 
@@ -94,3 +89,12 @@ To manually test the API, do the following:
 2. Start your redis server `brew services restart redis`.
 3. start your rails server `rails s`.
 4. Use your favorite api client to make API requests as documented above.
+
+
+## Dependencies
+
+- JWT: `JWT` is used for generating authentication tokens.
+- Bcrypt: `Bcrypt` is used for hashing user passwords before storing in DB
+- Redis: `Redis` is used for data storage
+- Mock Redis: `MockRedis` is used for mocking redis during tests
+- ActiveModel: `ActiveModel` is used for validations on the pure ruby object models.

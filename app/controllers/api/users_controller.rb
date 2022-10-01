@@ -4,10 +4,7 @@ class Api::UsersController < ApplicationController
   skip_before_action :authenticate_request
 
   def create
-    @user = User.create(
-      username: user_params[:username],
-      password: user_params[:password]
-    )
+    @user = User.create(user_params.to_h.symbolize_keys)
     
     render json: @user.to_h, status: :ok
   rescue => e

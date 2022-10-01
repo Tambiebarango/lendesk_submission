@@ -39,7 +39,8 @@ RSpec.describe "Foo", type: :request do
       context "user cached data is not expired" do
         it "should return 'bar'" do
           allow(JwtClient).to receive(:decode).and_return({ username: "foobar" })
-          $redis.set("foobar", 1)
+          allow(BCrypt::Password).to receive(:new).and_return("password_hash")
+          $redis.hset("User-foobar", "password", "password")
 
           get "/api/foo", headers: headers
 
@@ -52,8 +53,6 @@ RSpec.describe "Foo", type: :request do
       context "when user cached data is expired" do
         it "should return 401" do
           allow(JwtClient).to receive(:decode).and_return({ username: "foobar" })
-          $redis.set("foobar", 1)
-          $redis.expire("foobar", -1)
 
           get "/api/foo", headers: headers
 

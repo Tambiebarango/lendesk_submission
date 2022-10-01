@@ -11,7 +11,7 @@ class User
   REDIS_BLOCKLIST = %(errors validation_context)
 
   class << self
-    def find_by(options = {})
+    def find(options = {})
       super do |result|
         return if result.empty?
         
