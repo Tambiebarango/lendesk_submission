@@ -14,13 +14,14 @@ It also has a `create` class method that will initialize the object after the in
 
 I've used `bcrypt` to hash the user's password, so at no point in time is the bare password available or stored. `BCrypt` has the ability to compare raw strings to the hashed password and that's what I'm using to authenticate users.
 
-When a new user creates a new login, the `User.create` call will hash their password and store in the redis db once the complexity of the password and uniqueness of the username have been validated.
+When a new user creates a new login, the `User.create` call will hash their password and store in the redis db once the complexity of the password and uniqueness of the username have been validated. Note the `hset` call that stores the user in redis is wrapped in a transaction to prevent race conditions that will break the uniqueness of usernames in the database. More on this in *Limitations* section.
 
-When a user attempts to login with username and password, I will initialze a temporary `User` object calling `User.new` and passing in the stored user's user name and a hash of the stored user's password and then call `.authenticate` on that instance to compare the password sent to the login endpoint against the hash.
+When a user attempts to login with username and password, I will initialze a temporary `User` object calling `User.new` and passing in the stored user's user name and a hash of the stored user's password and then call `.correct_password?` on that instance to compare the password sent to the login endpoint against the hash.
 
 Once authenticated, I will then provide the user with a `JWT` token that expires in 2 hours authenticating them for every other request in the api such as `GET /api/foo`.
 
 Before every request I will authenticate the request by checking the headers for an `Authorization` header `JWT`. I decode the `JWT` and confirm that the user tied to the `JWT` exists in redis.
+
 
 ## Future solutions
 
@@ -89,7 +90,7 @@ To run the full suite of tests (unit and integration), do the following:
 To manually test the API, do the following:
 
 1. Ensure you have `redis` installed. `brew install redis`
-2. Start your redis server `brew services restart redis`.
+2. Start your redis server `brew services start redis`.
 3. start your rails server `rails s`.
 4. Use your favorite api client to make API requests as documented above.
 
