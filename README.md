@@ -91,8 +91,13 @@ To manually test the API, do the following:
 
 1. Ensure you have `redis` installed. `brew install redis`
 2. Start your redis server `brew services start redis`.
-3. start your rails server `rails s`.
-4. Use your favorite api client to make API requests as documented above.
+3. Generate a secret key, or get your default rails secret key
+4. Create a `_env.rb` file under `config/` and add 
+```ruby
+ENV["SECRET_KEY"] = <your secret key>
+```
+5. start your rails server `rails s`.
+6. Use your favorite api client to make API requests as documented above.
 
 
 ## Dependencies

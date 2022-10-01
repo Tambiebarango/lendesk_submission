@@ -8,7 +8,7 @@ class User
   validates :password, presence: true, complex: true
   
   REDIS_PREFIX = "User-"
-  REDIS_BLOCKLIST = %(errors validation_context)
+  REDIS_BLOCKLIST = %w(errors validation_context)
 
   class << self
     def find(options = {})
@@ -26,6 +26,7 @@ class User
         id = to_db_id(user.username)
 
         save_to_redis(user, id)
+        
         user
       end
     end
@@ -35,7 +36,7 @@ class User
     @username = username
     @password = password
 
-    if validate && self.valid?
+    if password.present? && validate && self.valid?
       hash_password
     end
   end
