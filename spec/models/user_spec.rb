@@ -102,4 +102,38 @@ RSpec.describe User, type: :model do
       end
     end
   end
+
+  describe "#correct_password?" do
+    context "when pword is wrong" do
+      it "should return false" do
+        user = User.new(username: "testuser", password: "password")
+        
+        expect(user.correct_password?("wrong")).to be false
+      end
+    end
+    
+    context "when pword is correct" do
+      it "should return true" do
+        user = User.new(username: "testuser", password: "password")
+        
+        expect(user.correct_password?("password")).to be true
+      end
+    end
+  end
+
+  describe "to_h" do
+    it "should return hash with username" do
+      user = User.new(username: "testuser", password: "password")
+
+      expect(user.to_h).to eq({ username: "testuser" })
+    end
+  end
+
+  describe "#db_id" do
+    it "should append User to user's username" do
+      user = User.new(username: "testuser", password: "password")
+
+      expect(user.db_id).to eq("User-testuser")
+    end
+  end
 end

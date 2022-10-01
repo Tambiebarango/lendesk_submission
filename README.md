@@ -30,7 +30,9 @@ This submission doesn't take backups of redis into account. However, in a future
 2. Store this dump file in a remote location
 3. On data loss, retrieve the backed up data from backup dump.
 
+### Limitations 
 
+- Race conditions: In order to enforce the uniqueness of primary keys (`#{Model}-{record.pk}`) even in the event of a race condition, I have wrapped every transaction that creates a record in redis in a redis transaction. This will ensure that whilst writing to redis, redis doesn't accept any other requests. This has the potential to slow down the application; however, it's a risk worth taking to preserve uniqueness of primary keys.
 
 ## API Documentation
 

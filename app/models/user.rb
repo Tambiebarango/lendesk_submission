@@ -40,7 +40,7 @@ class User
     end
   end
 
-  def authenticate(pword)
+  def correct_password?(pword)
     @password == pword
   end
 
@@ -51,7 +51,7 @@ class User
   end
 
   def db_id
-    "#{REDIS_PREFIX}#{username}"
+    self.class.to_db_id(username)
   end
   
   attr_reader :username, :password

@@ -4,7 +4,7 @@ class Api::AuthenticationController < ApplicationController
   def create
     @user = User.find(params[:username])
     
-    if @user && @user.authenticate(params[:password])
+    if @user && @user.correct_password?(params[:password])
       token = JwtClient.encode(username: @user.username)
 
       render json: {
