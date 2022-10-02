@@ -32,9 +32,15 @@ module RedisRecordConcern
     def save_to_redis(record, hash_name)
       variables = record.instance_variables
       args = [hash_name]
+      
       variables.each do |var|
         clean_var = var.to_s.gsub("@", "")
         
+        # Classes that include this module must define a REDIS_BLOCKLIST
+        # This will be an array of instance variables that should not be saved to redis
+        # E.g. for the User model, the password and other instance variables defined by 
+        # activemodel gem should not be saved to redis
+
         next if self::REDIS_BLOCKLIST.include?(clean_var)
 
         args << clean_var
@@ -45,6 +51,9 @@ module RedisRecordConcern
     end
 
     def to_db_id(pk)
+      # Classes that include this module must define a REDIS_PREFIX
+      # This will prefix the model's pk in redis.
+
       "#{self::REDIS_PREFIX}#{pk}"
     end
   end
