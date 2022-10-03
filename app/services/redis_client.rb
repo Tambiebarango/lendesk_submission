@@ -6,11 +6,13 @@ class RedisClient
       redis.send(name, *args, &block)
     end
 
-    def hset(hash, *field_values)
+    def hset(action, hash, *field_values)
       # override `hset` method by wrapping it in a transaction
       # so that db pks (hash) uniqueness can be enforced
       
-      raise "Record must be unique" unless unique_id?(hash)
+      if action == "create"
+        raise "Record must be unique" unless unique_id?(hash)
+      end
 
       redis.multi
       redis.hset(hash, *field_values)

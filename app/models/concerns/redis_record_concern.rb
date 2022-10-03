@@ -29,9 +29,9 @@ module RedisRecordConcern
       yield record
     end
 
-    def save_to_redis(record, hash_name)
+    def save_to_redis(record, hash_name, action = "create")
       variables = record.instance_variables
-      args = [hash_name]
+      args = [action, hash_name]
       
       variables.each do |var|
         clean_var = var.to_s.gsub("@", "")
