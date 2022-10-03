@@ -14,7 +14,7 @@ It also has a `create` class method that will initialize the object after the in
 
 I've used `bcrypt` to hash the user's password, so at no point in time is the bare password available or stored. `BCrypt` has the ability to compare raw strings to the hashed password and that's what I'm using to authenticate users.
 
-When a new user creates a new login, the `User.create` call will hash their password and store in the redis db once the complexity of the password and uniqueness of the username have been validated. Note the `hset` call that stores the user in redis is wrapped in a transaction to prevent race conditions that will break the uniqueness of usernames in the database. More on this in *Limitations* section.
+When a new user creates a new login, the `User.create` call will hash their password and store in the redis db once the complexity of the password and uniqueness of the username have been validated. Note the `hset` call that stores the user in redis is wrapped in a transaction to prevent race conditions that will break the uniqueness of usernames in the database after the uniqueness validation has run at both the model and database level. More on this in *Limitations* section.
 
 When a user attempts to login with username and password, I will initialze a temporary `User` object calling `User.new` and passing in the stored user's user name and a hash of the stored user's password and then call `.correct_password?` on that instance to compare the password sent to the login endpoint against the hash.
 
@@ -33,7 +33,7 @@ This submission doesn't take backups of redis into account. However, in a future
 
 ### Limitations 
 
-- Race conditions: In order to enforce the uniqueness of primary keys (`#{Model}-{record.pk}`) even in the event of a race condition, I have wrapped every transaction that creates a record in redis in a redis transaction. This will ensure that whilst writing to redis, redis doesn't accept any other requests. This has the potential to slow down the application; however, it's a risk worth taking to preserve uniqueness of primary keys.
+- Race conditions: In order to enforce the uniqueness of primary keys (`#{Model}-{record.pk}`) even in the event of a race condition, I have wrapped every transaction that creates a record (`hset`) in redis in a redis transaction. This will ensure that whilst writing to redis, redis doesn't accept any other requests. This has the potential to slow down the application; however, it's a risk worth taking to preserve uniqueness of primary keys. Before the transaction begins, a uniqueness check will be done at the database level as well. 
 
 ## API Documentation
 

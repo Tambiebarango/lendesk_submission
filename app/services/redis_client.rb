@@ -10,6 +10,8 @@ class RedisClient
       # override `hset` method by wrapping it in a transaction
       # so that db pks (hash) uniqueness can be enforced
       
+      raise "Record must be unique" unless unique_id?(hash)
+
       redis.multi
       redis.hset(hash, *field_values)
       redis.exec
@@ -18,6 +20,10 @@ class RedisClient
     private
       def redis
         $redis
+      end
+
+      def unique_id?(hash)
+        redis.hgetall(hash).empty?
       end
   end
 end

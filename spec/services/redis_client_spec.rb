@@ -3,38 +3,22 @@
 require 'rails_helper'
 
 RSpec.describe "RedisClient" do
-  describe "#self.hgetall" do
-    it "should get key from redis" do
-      $redis.hset("hash", "key", "value")
-
-      expect(RedisClient.hgetall("hash")).to eq({"key" => "value"})
-    end
-  end
-  
   describe "#self.hset" do
-    it "should set key in redis" do
-      RedisClient.hset("hash", "key", "value")
-
-      expect($redis.hgetall("hash")).to eq({"key" => "value"})
-    end
-  end
-
-  describe "#self.exists?" do
-    context "when key exists" do
-      it "should return true" do
+    context "when record is unique" do
+      it "should set key in redis" do
         RedisClient.hset("hash", "key", "value")
 
-        result = RedisClient.exists?("hash")
-
-        expect(result).to be_truthy
+        expect($redis.hgetall("hash")).to eq({"key" => "value"})
       end
     end
-    
-    context "when key does not exist" do
-      it "should return false" do
-        result = RedisClient.exists?("hash")
 
-        expect(result).to be_falsey
+    context "when record is not unique" do
+      it "should raise error" do
+        RedisClient.hset("hash", "key", "value")
+
+        expect {
+          RedisClient.hset("hash", "key", "value")
+        }.to raise_error(RuntimeError, /Record must be unique/)
       end
     end
   end

@@ -65,8 +65,6 @@ RSpec.configure do |config|
   config.include EnvHelper
 
   config.before(:each) do
-    mock_redis = MockRedis.new
-    allow(Redis).to receive(:new).and_return(mock_redis)
     $redis.flushdb
   end
 end
